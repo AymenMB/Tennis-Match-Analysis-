@@ -1,0 +1,13 @@
+# --- START OF FILE requirements.txt ---
+
+numpy>=1.21.0,<1.25.0 # Updated numpy, pinned upper bound for broader compatibility
+torch>=1.10.0,<2.1.0 # Updated PyTorch LTS or stable versions
+sympy>=1.10.0 # Updated sympy
+tqdm>=4.60.0 # Updated tqdm
+matplotlib>=3.5.0 # Updated matplotlib
+scipy>=1.7.0 # Updated scipy
+opencv-python-headless>=4.5.0 # Updated OpenCV (headless is often sufficient for servers)
+tensorboardX>=2.6 # Kept as is, or consider switching to torch.utils.tensorboard
+albumentations>=1.1.0 # Added for augmentation
+
+# --- END OF FILE requirements.txt ---

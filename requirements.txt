@@ -1,0 +1,24 @@
+# requirements.txt (Updated for Python 3.12 / CUDA 12.4 / RTX 3060)
+
+# Base Data Science & Utilities
+numpy==1.26.4
+sympy==1.13.1
+pandas==2.2.2
+matplotlib==3.8.4
+tqdm==4.66.4 # Updated version
+sympy==1.12
+
+# Image/Video Processing
+opencv-python==4.9.0.80
+scenedetect==0.6.2
+
+# Machine Learning
+catboost==1.2.5
+
+# PyTorch for CUDA 12.4 (These lines are mainly for reference)
+# REMEMBER TO INSTALL PyTorch, Torchvision, Torchaudio using the specific
+# command from pytorch.org FIRST! Example:
+# pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# torch==2.3.x # Replace with actual version installed by the command
+# torchvision==0.18.x # Replace with actual version installed by the command
+# torchaudio==2.3.x # Replace with actual version installed by the command

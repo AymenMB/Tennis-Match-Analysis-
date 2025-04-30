@@ -1,0 +1,11 @@
+# Allow pip to install recent compatible versions
+numpy
+opencv-python
+pandas
+scipy
+tensorboardX
+# Added dependencies (keep these)
+tqdm
+scikit-learn
+catboost
+gdown
