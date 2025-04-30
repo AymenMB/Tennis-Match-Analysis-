@@ -2,15 +2,10 @@
 
 This project implements an advanced tennis match analysis system using deep learning and machine learning techniques. It can automatically detect the tennis ball, predict bounces, detect court lines, and visualize player movement and ball trajectory on a 2D court representation.
 
-<p align="center">
-  <img src="pics/hard.gif" width="30%" />
-  <img src="pics/grass.gif" width="30%" /> 
-  <img src="pics/clay.gif" width="30%" />
-</p>
-
 ## Table of Contents
 
 - [Project Overview](#project-overview)
+- [System Architecture](#system-architecture)
 - [CRISP-DM Methodology](#crisp-dm-methodology)
   - [Business Understanding](#business-understanding)
   - [Data Understanding](#data-understanding)
@@ -40,6 +35,56 @@ This project implements an advanced tennis match analysis system using deep lear
 ## Project Overview
 
 This project implements a comprehensive system for tennis match analysis that can process standard tennis match videos and extract valuable insights through computer vision and machine learning techniques. The system detects the ball position in consecutive frames, identifies ball bounces, recognizes court lines, and maps all events onto a standardized 2D court representation. The final output allows coaches and players to analyze patterns, statistics, and tactical aspects of the game.
+
+### System Architecture
+
+The following diagram illustrates the high-level architecture of the Tennis Analysis system:
+
+```mermaid
+flowchart TD
+    subgraph Input
+        A[Tennis Match Video]
+    end
+
+    subgraph "Core Processing Pipeline"
+        B[Frame Extraction]
+        C[Court Detection]
+        D[Ball Detection]
+        E[Bounce Detection]
+        F[Player Detection]
+        G[2D Court Mapping]
+
+        B --> C
+        B --> D
+        B --> F
+        C --> G
+        D --> E
+        D --> G
+        E --> G
+        F --> G
+    end
+
+    subgraph Output
+        H[Annotated Video]
+        I[2D Court Visualization]
+        J[Statistical Analysis]
+    end
+
+    A --> B
+    G --> H
+    G --> I
+    G --> J
+
+    classDef input fill:#d1f0ff,stroke:#0066cc,stroke-width:2px
+    classDef processing fill:#ffe0cc,stroke:#ff6600,stroke-width:2px
+    classDef output fill:#d6efd1,stroke:#006600,stroke-width:2px
+
+    class A input
+    class B,C,D,E,F,G processing
+    class H,I,J output
+```
+
+The system consists of several specialized components that work together to analyze tennis videos. Each component uses deep learning or computer vision techniques to extract specific information from the video frames.
 
 ## CRISP-DM Methodology
 
@@ -151,13 +196,6 @@ The system consists of multiple specialized models working together:
 - **F1 Score**: 95.4%
 - **Challenges**: Fast serves and ball occlusion remain challenging
 
-#### Bounce Detection Performance
-
-- **Accuracy**: 92.3% on test set
-- **False Positive Rate**: 7.1%
-- **False Negative Rate**: 8.4%
-- **Main Challenge**: Differentiating between low bounces and ball carried close to ground
-
 #### Court Detection Performance
 
 - **Average Keypoint Error**: 4.3 pixels
@@ -240,6 +278,158 @@ Player detection is implemented using a pre-trained Faster R-CNN model:
 4. **Player Tracking**: Basic tracking is performed to maintain player identities across frames
 
 This component enables tracking player positions throughout the match, which is crucial for tactical analysis and understanding player movement patterns.
+
+### Component Interaction Sequence
+
+The following sequence diagram shows how the different components interact during the video analysis process:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Main as Main Processing
+    participant FR as Frame Reader
+    participant SD as Scene Detector
+    participant CD as Court Detection
+    participant BD as Ball Detection
+    participant PD as Player Detection
+    participant BounceD as Bounce Detection
+    participant Map as 2D Court Mapper
+    participant VG as Video Generator
+
+    User->>Main: Start Analysis (video path)
+    activate Main
+
+    Main->>FR: Read Video
+    activate FR
+    FR-->>Main: Return Frames & FPS
+    deactivate FR
+
+    Main->>SD: Detect Scenes
+    activate SD
+    SD-->>Main: Return Scene Timestamps
+    deactivate SD
+
+    par Court Detection
+        Main->>CD: Detect Court (keyframes)
+        activate CD
+        CD-->>Main: Return Keypoints & Homography
+        deactivate CD
+    and Ball Detection
+        Main->>BD: Detect Ball (all frames)
+        activate BD
+        BD-->>Main: Return Ball Trajectory
+        deactivate BD
+    and Player Detection
+        Main->>PD: Detect Players (all frames)
+        activate PD
+        PD-->>Main: Return Player Positions
+        deactivate PD
+    end
+
+    Main->>BounceD: Detect Bounces (trajectory data)
+    activate BounceD
+    BounceD-->>Main: Return Bounce Positions
+    deactivate BounceD
+
+    Main->>Map: Map to 2D Court
+    activate Map
+    Map-->>Main: Return Mapped Coordinates
+    deactivate Map
+
+    Main->>Main: Annotate Frames
+
+    Main->>VG: Generate Output Video
+    activate VG
+    VG-->>Main: Return Video File Path
+    deactivate VG
+
+    Main-->>User: Return Analysis Results
+    deactivate Main
+```
+
+### Ball Detection and Tracking Workflow
+
+The following diagram illustrates the detailed workflow for ball detection and tracking:
+
+```mermaid
+flowchart TD
+    Input[Input Video Frames] --> A[Frame Preprocessing]
+    A --> B[Frame Grouping<br>3 consecutive frames]
+    B --> C[TrackNet CNN Model]
+    C --> D[Heatmap Generation]
+    D --> E{Ball Detected?}
+
+    E -->|Yes| F[Extract Ball Coordinates]
+    E -->|No| G[Interpolation<br>from nearby frames]
+
+    F --> H[Coordinate Storage]
+    G --> H
+
+    H --> I[Trajectory Analysis]
+    I --> J[Kalman Filter<br>Trajectory Smoothing]
+    J --> K[Speed Calculation]
+
+    subgraph "Bounce Detection"
+        K --> L[Feature Extraction]
+        L --> M[CatBoost Model]
+        M --> N{Is Bounce?}
+        N -->|Yes| O[Record Bounce<br>Position & Frame]
+        N -->|No| P[Continue<br>Tracking]
+    end
+
+    O --> Q[Final Ball Trajectory<br>with Bounces]
+    P --> Q
+
+    classDef preprocessing fill:#f9f0ff,stroke:#9673a6,stroke-width:2px
+    classDef model fill:#ffe0cc,stroke:#ff6600,stroke-width:2px
+    classDef analysis fill:#d1f0ff,stroke:#0066cc,stroke-width:2px
+    classDef output fill:#d6efd1,stroke:#006600,stroke-width:2px
+
+    class A,B preprocessing
+    class C,D,E,F,G model
+    class H,I,J,K,L,M,N analysis
+    class O,P,Q output
+```
+
+The ball detection and tracking process plays a critical role in the overall system, as it provides the foundation for bounce detection, player interaction analysis, and 2D court mapping.
+
+### User Interface Workflow
+
+The following diagram shows the user interaction flow when using the system through the Streamlit web interface:
+
+```mermaid
+flowchart LR
+    A[User] -->|Upload Video| B[Streamlit Interface]
+    B -->|Send Video| C[Backend Processing]
+
+    subgraph "Backend Processing"
+        C -->|Extract Frames| D[Frame Processing]
+        D --> E[Court Detection]
+        D --> F[Ball Detection]
+        D --> G[Player Detection]
+        F --> H[Bounce Detection]
+        E & F & G & H --> I[2D Court Mapping]
+        I --> J[Video Annotation]
+        J --> K[Generate Output Video]
+    end
+
+    K -->|Return| B
+    B -->|Display Results| L[Analysis Results]
+    L -->|View| A
+    B -->|Download Option| A
+
+    classDef user fill:#d1f0ff,stroke:#0066cc,stroke-width:2px
+    classDef interface fill:#f9f0ff,stroke:#9673a6,stroke-width:2px
+    classDef processing fill:#ffe0cc,stroke:#ff6600,stroke-width:2px
+    classDef output fill:#d6efd1,stroke:#006600,stroke-width:2px
+
+    class A user
+    class B,L interface
+    class C,D,E,F,G,H,I,J processing
+    class K output
+```
+
+This interface makes the advanced computer vision technology accessible to users without technical expertise, allowing coaches, players, and analysts to gain valuable insights from their tennis videos.
 
 ## Technical Implementation
 
@@ -437,6 +627,62 @@ To train the bounce detection model:
 ## Project Workflow
 
 This section describes the complete end-to-end workflow of the tennis analysis project.
+
+### Video Processing Pipeline
+
+The following diagram illustrates the step-by-step processing pipeline of a tennis match video:
+
+```mermaid
+flowchart TD
+    A[Input Video] --> B[Frame Extraction]
+    B --> C{Scene Detection}
+
+    C -->|Rally scenes| D[Court Detection]
+    C -->|All frames| E[Ball Detection]
+    C -->|All frames| F[Player Detection]
+
+    D --> G[Homography Matrix Calculation]
+    E --> H[Ball Trajectory Analysis]
+    H --> I[Bounce Detection]
+
+    G --> J[2D Court Mapping]
+    I --> J
+    F --> J
+    H --> J
+
+    J --> K[Frame Annotation]
+    K --> L[Video Generation]
+    J --> M[Statistical Analysis]
+
+    subgraph "Pre-processing"
+    B
+    C
+    end
+
+    subgraph "Detection & Analysis"
+    D
+    E
+    F
+    G
+    H
+    I
+    end
+
+    subgraph "Visualization & Output"
+    J
+    K
+    L
+    M
+    end
+
+    classDef preprocessing fill:#f9f0ff,stroke:#9673a6,stroke-width:2px
+    classDef detection fill:#ffe0cc,stroke:#ff6600,stroke-width:2px
+    classDef output fill:#d6efd1,stroke:#006600,stroke-width:2px
+
+    class B,C preprocessing
+    class D,E,F,G,H,I detection
+    class J,K,L,M output
+```
 
 ### 1. Data Collection and Preparation
 
